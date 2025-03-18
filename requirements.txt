@@ -6,3 +6,4 @@ pandas
 sqlalchemy
 groq
 langchain_openai
+langchain_groq
