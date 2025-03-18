@@ -5,3 +5,4 @@ openpyxl
 pandas 
 sqlalchemy
 groq
+langchain_openai
