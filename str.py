@@ -17,8 +17,8 @@ DB_CONFIG = {
 }
 MODEL_CONFIG = {
     "model": "llama-3.3-70b-versatile",
-    "temperature": 0.3,
-    "max_tokens": 1024
+    "temperature": 0.7,
+    "max_tokens": 2000
 }
 
 # Initialize session state
@@ -58,6 +58,8 @@ def excel_to_sqlite(excel_file):
         engine = create_engine(**DB_CONFIG)
         with pd.ExcelFile(excel_file) as excel_data:
             for sheet_name in excel_data.sheet_names:
+                #handle names with special characters
+                sheet_name = sheet_name.replace(" ", "_")
                 df = pd.read_excel(excel_data, sheet_name=sheet_name)
                 df.to_sql(
                     name=sheet_name,
