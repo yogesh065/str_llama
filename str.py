@@ -16,7 +16,7 @@ DB_CONFIG = {
     "creator": lambda: sqlite3.connect("file::memory:?cache=shared", uri=True)
 }
 MODEL_CONFIG = {
-    "model": "llama-3.3-70b-versatile",
+    "model": "deepseek-r1-distill-qwen-32b",
     "temperature": 0.7,
     "max_tokens": 2000
 }
