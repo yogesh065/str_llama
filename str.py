@@ -67,11 +67,15 @@ def excel_to_sqlite(excel_file):
             inspector = inspect(engine)
             existing_tables = inspector.get_table_names()
             for table in existing_tables:
-                conn.execute(f"DROP TABLE IF EXISTS {table}")
+                # Use double quotes around table names to handle spaces
+                conn.execute(f"DROP TABLE IF EXISTS \"{table}\"")
                 
         # Rest of the processing remains the same
         with pd.ExcelFile(excel_file) as excel_data:
             for sheet_name in excel_data.sheet_names:
+                # Clean sheet name to ensure it's a valid SQL identifier
+                cleaned_sheet_name = re.sub(r'\W+', '_', sheet_name)
+                
                 df = pd.read_excel(excel_data, sheet_name=sheet_name)
                 df.columns = [re.sub(r'\W+', '_', str(col)) for col in df.columns]
                 
@@ -83,7 +87,7 @@ def excel_to_sqlite(excel_file):
                 
                 if not df.empty and len(df.columns) > 0:
                     df.to_sql(
-                        name=sheet_name,
+                        name=cleaned_sheet_name,
                         con=engine,
                         if_exists='replace',
                         index=False
@@ -91,6 +95,7 @@ def excel_to_sqlite(excel_file):
         return engine, None
     except Exception as e:
         return None, str(e)
+
 
 
 def create_agent(engine):
