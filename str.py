@@ -58,24 +58,29 @@ def initialize_llm():
 
 
 def excel_to_sqlite(excel_file):
-    """Process Excel file to SQLite database"""
+    """Process Excel file to SQLite database with clean state"""
     try:
         engine = create_engine(**DB_CONFIG)
+        
+        # Clear existing tables before processing new file
+        with engine.begin() as conn:
+            inspector = inspect(engine)
+            existing_tables = inspector.get_table_names()
+            for table in existing_tables:
+                conn.execute(f"DROP TABLE IF EXISTS {table}")
+                
+        # Rest of the processing remains the same
         with pd.ExcelFile(excel_file) as excel_data:
             for sheet_name in excel_data.sheet_names:
                 df = pd.read_excel(excel_data, sheet_name=sheet_name)
-                # Convert all column names to strings and handle special characters
                 df.columns = [re.sub(r'\W+', '_', str(col)) for col in df.columns]
-                print(df.info())
                 
-                # Convert unsupported data types to strings
                 for col in df.columns:
                     if df[col].dtype == 'datetime64[ns]' or df[col].dtype == 'datetime64[ns, UTC]':
                         df[col] = df[col].astype(str)
                     elif df[col].dtype == 'object':
                         df[col] = df[col].apply(lambda x: str(x) if isinstance(x, (datetime.time, datetime.date)) else x)
                 
-                # Check if DataFrame has columns before writing to SQL
                 if not df.empty and len(df.columns) > 0:
                     df.to_sql(
                         name=sheet_name,
@@ -83,11 +88,10 @@ def excel_to_sqlite(excel_file):
                         if_exists='replace',
                         index=False
                     )
-                else:
-                    print(f"Skipping sheet '{sheet_name}' as it has no columns.")
         return engine, None
     except Exception as e:
         return None, str(e)
+
 
 def create_agent(engine):
     """Create SQL analysis agent"""
