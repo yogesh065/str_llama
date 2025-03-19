@@ -7,7 +7,8 @@ from sqlalchemy import create_engine, StaticPool, inspect
 import sqlite3
 import time
 import re
-from datetime import datetime
+import datetime
+import re
 # App layout
 st.set_page_config(page_title="AI Data scientist", layout="wide", page_icon="🤖")
 st.title("📈 Smart Data Analysis Chat with Yogesh")
@@ -20,7 +21,7 @@ DB_CONFIG = {
 MODEL_CONFIG = {
     "model": "llama-3.3-70b-specdec",
     "temperature": 0.7,
-    "max_tokens": 2000
+    "max_tokens":1000,
 }
 
 # Initialize session state
@@ -55,8 +56,6 @@ def initialize_llm():
     )
 
 
-import re
-import datetime
 
 def excel_to_sqlite(excel_file):
     """Process Excel file to SQLite database"""
