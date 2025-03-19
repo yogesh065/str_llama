@@ -6,6 +6,8 @@ from langchain_groq import ChatGroq
 from sqlalchemy import create_engine, StaticPool, inspect
 import sqlite3
 import time
+import re
+from datetime import datetime
 # App layout
 st.set_page_config(page_title="AI Data scientist", layout="wide", page_icon="🤖")
 st.title("📈 Smart Data Analysis Chat with Yogesh")
@@ -52,21 +54,38 @@ def initialize_llm():
         **MODEL_CONFIG
     )
 
+
+import re
+import datetime
+
 def excel_to_sqlite(excel_file):
     """Process Excel file to SQLite database"""
     try:
         engine = create_engine(**DB_CONFIG)
         with pd.ExcelFile(excel_file) as excel_data:
             for sheet_name in excel_data.sheet_names:
-                #handle names with special characters
-                sheet_name = sheet_name.replace(" ", "_")
                 df = pd.read_excel(excel_data, sheet_name=sheet_name)
-                df.to_sql(
-                    name=sheet_name,
-                    con=engine,
-                    if_exists='replace',
-                    index=False
-                )
+                # Convert all column names to strings and handle special characters
+                df.columns = [re.sub(r'\W+', '_', str(col)) for col in df.columns]
+                print(df.info())
+                
+                # Convert unsupported data types to strings
+                for col in df.columns:
+                    if df[col].dtype == 'datetime64[ns]' or df[col].dtype == 'datetime64[ns, UTC]':
+                        df[col] = df[col].astype(str)
+                    elif df[col].dtype == 'object':
+                        df[col] = df[col].apply(lambda x: str(x) if isinstance(x, (datetime.time, datetime.date)) else x)
+                
+                # Check if DataFrame has columns before writing to SQL
+                if not df.empty and len(df.columns) > 0:
+                    df.to_sql(
+                        name=sheet_name,
+                        con=engine,
+                        if_exists='replace',
+                        index=False
+                    )
+                else:
+                    print(f"Skipping sheet '{sheet_name}' as it has no columns.")
         return engine, None
     except Exception as e:
         return None, str(e)
