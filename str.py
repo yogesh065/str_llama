@@ -55,7 +55,7 @@ def initialize_llm():
         **MODEL_CONFIG
     )
 
-
+from sqlalchemy.sql import text
 
 def excel_to_sqlite(excel_file):
     """Process Excel file to SQLite database with clean state"""
@@ -63,12 +63,13 @@ def excel_to_sqlite(excel_file):
         engine = create_engine(**DB_CONFIG)
         
         # Clear existing tables before processing new file
-        with engine.begin() as conn:
+        with engine.connect() as conn:
             inspector = inspect(engine)
             existing_tables = inspector.get_table_names()
             for table in existing_tables:
                 # Use double quotes around table names to handle spaces
-                conn.execute(f"DROP TABLE IF EXISTS \"{table}\"")
+                # and wrap the SQL command in text()
+                conn.execute(text(f"DROP TABLE IF EXISTS \"{table}\""))
                 
         # Rest of the processing remains the same
         with pd.ExcelFile(excel_file) as excel_data:
@@ -95,6 +96,7 @@ def excel_to_sqlite(excel_file):
         return engine, None
     except Exception as e:
         return None, str(e)
+
 
 
 
